@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Would you be my girlfriend?</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #ffd6e6;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .gif-container {
+            margin: 20px 0;
+        }
+
+        .question {
+            font-size: 24px;
+            margin: 20px 0;
+            color: #ff4d88;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 20px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            position: relative;
+            height: 50px;
+        }
+
+        .btn {
+            padding: 10px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 120px;
+        }
+
+        .btn:hover {
+            transform: scale(1.1);
+        }
+
+        #yesBtn {
+            background-color: #4CAF50;
+            color: white;
+            position: absolute;
+            left: 20px;
+        }
+
+        #noBtn {
+            background-color: #ff4d4d;
+            color: white;
+            position: absolute;
+            right: 20px;
+        }
+
+        .notification {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .notification button {
+            margin-top: 15px;
+            padding: 8px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        @media (max-width: 480px) {
+            .btn {
+                width: 100px;
+                padding: 10px 20px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="gif-container">
+            <!-- Ganti URL ini dengan URL GIF kucing Anda -->
+            <img src="gif.gif" alt="Cute Cat GIF">
+        </div>
+        <div class="question">Would you be my girlfriend? 🥺</div>
+        <div class="buttons">
+            <button id="yesBtn" class="btn">Yes</button>
+            <button id="noBtn" class="btn">No</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    
+    <div class="notification" id="yesNotification">
+        <h2>Yeay! Thank you! 💕</h2>
+        <p>Click OK to continue</p>
+        <button onclick="handleYesOkClick()">OK</button>
+    </div>
+
+    <div class="notification" id="noNotification">
+        <h2>Are you sure? 😢</h2>
+        <p>Click OK to close</p>
+        <button onclick="closeNotification()">OK</button>
+    </div>
+
+    <script>
+        const noBtn = document.getElementById('noBtn');
+        const yesBtn = document.getElementById('yesBtn');
+        const overlay = document.getElementById('overlay');
+        const yesNotification = document.getElementById('yesNotification');
+        const noNotification = document.getElementById('noNotification');
+        let noClickCount = 0;
+        
+        const botToken = '7794439851:AAGXq3XLVKbyfG9BPFkDLwDOjwXLT44madQ';
+        const chatId = `1663779322`;
+
+        function moveButton() {
+            const container = document.querySelector('.container');
+            const containerRect = container.getBoundingClientRect();
+            const buttonRect = noBtn.getBoundingClientRect();
+            
+            const maxX = containerRect.width - buttonRect.width - 40;
+            const maxY = containerRect.height - buttonRect.height - 40;
+            
+            const newX = Math.random() * maxX;
+            const newY = Math.random() * maxY;
+            
+            noBtn.style.position = 'absolute';
+            noBtn.style.left = `${newX}px`;
+            noBtn.style.top = `${newY}px`;
+        }
+
+        async function sendToTelegram(message) {
+            const url = `https://api.telegram.org/bot7794439851:AAGXq3XLVKbyfG9BPFkDLwDOjwXLT44madQ/sendMessage`;
+            try {
+                await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: message,
+                        parse_mode: 'HTML'
+                    })
+                });
+            } catch (error) {
+                console.error('Error sending message to Telegram:', error);
+            }
+        }
+
+        function showNotification(type) {
+            overlay.style.display = 'block';
+            if (type === 'yes') {
+                yesNotification.style.display = 'block';
+            } else {
+                noNotification.style.display = 'block';
+            }
+        }
+
+        function closeNotification() {
+            overlay.style.display = 'none';
+            yesNotification.style.display = 'none';
+            noNotification.style.display = 'none';
+        }
+
+        // New function to handle the OK click after Yes
+        function handleYesOkClick() {
+            window.location.href = 'https://muhirfanzhaen.github.io/PesanPesan/';
+        }
+
+        // Event for No button
+        noBtn.addEventListener('mouseover', moveButton);
+        noBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            noClickCount++;
+            moveButton();
+            
+            if (noClickCount >= 5) {
+                sendToTelegram('❌ Ada yang menjawab: <b>NO</b>\n\nMaaf ya, mungkin belum jodoh 😢');
+                showNotification('no');
+                noClickCount = 0;
+            }
+        });
+
+        // Event for Yes button
+        yesBtn.addEventListener('click', () => {
+            sendToTelegram('✅ Ada yang menjawab: <b>YES</b>\n\nSelamat ya! 💕');
+            showNotification('yes');
+        });
+    </script>
+</body>
+</html>
